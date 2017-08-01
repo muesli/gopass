@@ -2,7 +2,10 @@ package crunchy
 
 import (
 	"errors"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
+	"sync"
 )
 
 var (
@@ -19,9 +22,11 @@ var (
 	ErrTooFewChars = errors.New("Password does not contain enough different/unique characters")
 	// ErrTooSystematic gets returned when the password is too systematic (e.g. 123456, abcdef)
 	ErrTooSystematic = errors.New("Password is too systematic")
+	// ErrDictionary gets returned when the password is found in a dictionary
+	ErrDictionary = errors.New("Password is too common / from a dictionary")
 
-//	ErrDictionary    = errors.New("Password is a word in a dictionary")
-//	ErrTooCommon     = errors.New("Password is too common (from a wordlist)")
+	once  sync.Once
+	words = make(map[string]struct{})
 )
 
 func countUniqueChars(s string) int {
@@ -55,6 +60,30 @@ func countSystematicChars(s string) int {
 	return x
 }
 
+func foundInDictionaries(s string) bool {
+	once.Do(func() {
+		dicts, err := filepath.Glob("/usr/share/dict/*")
+		if err != nil {
+			return
+		}
+
+		for _, dict := range dicts {
+			buf, err := ioutil.ReadFile(dict)
+			if err != nil {
+				continue
+			}
+
+			for _, word := range strings.Split(string(buf), "\n") {
+				words[word] = struct{}{}
+			}
+		}
+	})
+
+	s = strings.TrimSpace(strings.ToLower(s))
+	_, ok := words[s]
+	return ok
+}
+
 // ValidatePassword checks password for common flaws
 // It returns nil if the password is considered acceptable.
 func ValidatePassword(password string) error {
@@ -74,9 +103,9 @@ func ValidatePassword(password string) error {
 		return ErrTooSystematic
 	}
 
-	// password = strings.ToLower(password)
-	// wordlist lookup
-	// dictionary lookup
+	if foundInDictionaries(password) {
+		return ErrDictionary
+	}
 
 	return nil
 }
