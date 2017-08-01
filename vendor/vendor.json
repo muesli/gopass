@@ -82,6 +82,12 @@
 			"revisionTime": "2016-11-23T14:36:37Z"
 		},
 		{
+			"checksumSHA1": "FswrVtKNmgo6aS6ZxE+LRC1KrY0=",
+			"path": "github.com/muesli/crunchy",
+			"revision": "533a9eb9f25e79d553c2888a3b8c780ee93c58c8",
+			"revisionTime": "2017-08-01T12:37:11Z"
+		},
+		{
 			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
 			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
 			"path": "github.com/pmezard/go-difflib/difflib",
