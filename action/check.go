@@ -19,6 +19,7 @@ func (s *Action) Check(c *cli.Context) error {
 	var out io.Writer
 	out = os.Stdout
 
+	foundWeakPasswords := false
 	for _, secret := range t.List(0) {
 		content, err := s.Store.Get(secret)
 		if err != nil {
@@ -26,8 +27,13 @@ func (s *Action) Check(c *cli.Context) error {
 		}
 
 		if err = crunchy.ValidatePassword(string(content)); err != nil {
-			fmt.Fprintf(out, "Weak password for %s: %v\n", secret, err)
+			foundWeakPasswords = true
+			fmt.Fprintf(out, "Detected weak password for %s: %v\n", secret, err)
 		}
+	}
+
+	if !foundWeakPasswords {
+		fmt.Fprintln(out, "No weak passwords detected.")
 	}
 
 	return nil
