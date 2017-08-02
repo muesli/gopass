@@ -6,13 +6,19 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/xrash/smetrics"
 )
 
 var (
 	// MinDiff is the minimum amount of unique characters required for a valid password
 	MinDiff = 5
+	// MinDist is the minimum WagnerFischer distance for mangled password dictionary lookups
+	MinDist = 3
 	// MinLength is the minimum length required for a valid password
 	MinLength = 6
+	// DictionaryPath contains all the dictionaries that will be parsed
+	DictionaryPath = "/usr/share/dict"
 
 	// ErrEmpty gets returned when the password is empty or all whitespace
 	ErrEmpty = errors.New("Password is empty or all whitespace")
@@ -24,6 +30,8 @@ var (
 	ErrTooSystematic = errors.New("Password is too systematic")
 	// ErrDictionary gets returned when the password is found in a dictionary
 	ErrDictionary = errors.New("Password is too common / from a dictionary")
+	// ErrMangledDictionary gets returned when the password is mangled, but found in a dictionary
+	ErrMangledDictionary = errors.New("Password is mangled, but too common / from a dictionary")
 
 	once  sync.Once
 	words = make(map[string]struct{})
@@ -43,10 +51,7 @@ func countUniqueChars(s string) int {
 
 func countSystematicChars(s string) int {
 	var x int
-	rs := []rune{}
-	for _, c := range s {
-		rs = append(rs, c)
-	}
+	rs := []rune(s)
 
 	for i, c := range rs {
 		if i == 0 {
@@ -60,28 +65,66 @@ func countSystematicChars(s string) int {
 	return x
 }
 
-func foundInDictionaries(s string) bool {
-	once.Do(func() {
-		dicts, err := filepath.Glob("/usr/share/dict/*")
+func reverse(s string) string {
+	rs := []rune(s)
+	for i, j := 0, len(rs)-1; i < j; i, j = i+1, j-1 {
+		rs[i], rs[j] = rs[j], rs[i]
+	}
+	return string(rs)
+}
+
+func normalize(s string) string {
+	return strings.TrimSpace(strings.ToLower(s))
+}
+
+func indexDictionaries() {
+	dicts, err := filepath.Glob(filepath.Join(DictionaryPath, "*"))
+	if err != nil {
+		return
+	}
+
+	for _, dict := range dicts {
+		buf, err := ioutil.ReadFile(dict)
 		if err != nil {
-			return
+			continue
 		}
 
-		for _, dict := range dicts {
-			buf, err := ioutil.ReadFile(dict)
-			if err != nil {
-				continue
-			}
-
-			for _, word := range strings.Split(string(buf), "\n") {
-				words[word] = struct{}{}
-			}
+		for _, word := range strings.Split(string(buf), "\n") {
+			words[normalize(word)] = struct{}{}
 		}
-	})
+	}
+}
 
-	s = strings.TrimSpace(strings.ToLower(s))
-	_, ok := words[s]
-	return ok
+func foundInDictionaries(s string) (string, error) {
+	once.Do(indexDictionaries)
+
+	pw := normalize(s)     // normalized password
+	revpw := reverse(pw)   // reversed password
+	mindist := len(pw) / 2 // minimum distance
+	if mindist > MinDist {
+		mindist = MinDist
+	}
+
+	// let's check perfect matches first
+	if _, ok := words[pw]; ok {
+		return pw, ErrDictionary
+	}
+	if _, ok := words[revpw]; ok {
+		return revpw, ErrMangledDictionary
+	}
+
+	for word := range words {
+		if dist := smetrics.WagnerFischer(word, pw, 1, 1, 1); dist <= mindist {
+			// fmt.Printf("%s is too similar to %s\n", pw, word)
+			return word, ErrMangledDictionary
+		}
+		if dist := smetrics.WagnerFischer(word, revpw, 1, 1, 1); dist <= mindist {
+			// fmt.Printf("Reversed %s (%s) is too similar to %s: %d\n", pw, revpw, word, dist)
+			return word, ErrMangledDictionary
+		}
+	}
+
+	return "", nil
 }
 
 // ValidatePassword checks password for common flaws
@@ -103,8 +146,8 @@ func ValidatePassword(password string) error {
 		return ErrTooSystematic
 	}
 
-	if foundInDictionaries(password) {
-		return ErrDictionary
+	if _, err := foundInDictionaries(password); err != nil {
+		return err
 	}
 
 	return nil

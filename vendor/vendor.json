@@ -82,10 +82,10 @@
 			"revisionTime": "2016-11-23T14:36:37Z"
 		},
 		{
-			"checksumSHA1": "CdpH269SWdq2d0v59bUT3galESY=",
+			"checksumSHA1": "kADZg6/wL1AQvSQHj54Ph+818SI=",
 			"path": "github.com/muesli/crunchy",
-			"revision": "7a7460eb1bec97ffa43f17538c3b5af9d0920f83",
-			"revisionTime": "2017-08-01T14:48:57Z"
+			"revision": "bb1c596eebb2c24ad7443c548f5eb58f023dbf4c",
+			"revisionTime": "2017-08-02T07:31:38Z"
 		},
 		{
 			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
@@ -147,6 +147,12 @@
 			"path": "github.com/urfave/cli",
 			"revision": "0bdeddeeb0f650497d603c4ad7b20cfe685682f6",
 			"revisionTime": "2016-11-22T04:36:10Z"
+		},
+		{
+			"checksumSHA1": "ZaOvCn/mlhJZ00hxTgTJ6gRn3MQ=",
+			"path": "github.com/xrash/smetrics",
+			"revision": "a3153f7040e90324c58c6287535e26a0ac5c1cc1",
+			"revisionTime": "2017-02-18T16:04:15Z"
 		},
 		{
 			"checksumSHA1": "xiderUuvye8Kpn7yX3niiJg32bE=",
