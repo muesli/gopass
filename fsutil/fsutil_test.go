@@ -4,20 +4,21 @@ import (
 	"crypto/rand"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 	"testing"
+
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 func TestCleanPath(t *testing.T) {
 	m := map[string]string{
-		"/home/user/../bob/.password-store": "/home/bob/.password-store",
-		"/home/user//.password-store":       "/home/user/.password-store",
+		filepath.Join("home", "user", "..", "bob", ".password-store"): filepath.Join("home", "bob", ".password-store"),
+		filepath.Join("home", "user", "/", ".password-store"):         filepath.Join("home", "user", ".password-store"),
 	}
-	usr, err := user.Current()
-	if err == nil {
-		m["~/.password-store"] = usr.HomeDir + "/.password-store"
-	}
+	home, _ := homedir.Dir()
+	expanded, _ := homedir.Expand(filepath.Join("~", ".password-store"))
+	m[expanded] = filepath.Join(home, ".password-store")
+
 	for in, out := range m {
 		got := CleanPath(in)
 		if out != got {
