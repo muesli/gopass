@@ -12,6 +12,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/justwatchcom/gopass/fsutil"
 	"github.com/justwatchcom/gopass/store"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 var (
@@ -191,7 +192,9 @@ func configLocation() string {
 	if xch := os.Getenv("XDG_CONFIG_HOME"); xch != "" {
 		return filepath.Join(xch, "gopass", "config.yml")
 	}
-	return filepath.Join(os.Getenv("HOME"), ".config", "gopass", "config.yml")
+
+	home, _ := homedir.Dir()
+	return filepath.Join(home, ".config", "gopass", "config.yml")
 }
 
 // configLocations returns the possible locations of gopass config files,
@@ -204,8 +207,10 @@ func configLocations() []string {
 	if xch := os.Getenv("XDG_CONFIG_HOME"); xch != "" {
 		l = append(l, filepath.Join(xch, "gopass", "config.yml"))
 	}
-	l = append(l, filepath.Join(os.Getenv("HOME"), ".config", "gopass", "config.yml"))
-	l = append(l, filepath.Join(os.Getenv("HOME"), ".gopass.yml"))
+
+	home, _ := homedir.Dir()
+	l = append(l, filepath.Join(home, ".config", "gopass", "config.yml"))
+	l = append(l, filepath.Join(home, ".gopass.yml"))
 	return l
 }
 
@@ -213,11 +218,14 @@ func configLocations() []string {
 // or returns the default location ~/.password-store if the env is
 // not set
 func PwStoreDir(mount string) string {
+	home, _ := homedir.Dir()
+
 	if mount != "" {
-		return fsutil.CleanPath(filepath.Join(os.Getenv("HOME"), ".password-store-"+strings.Replace(mount, string(filepath.Separator), "-", -1)))
+		return fsutil.CleanPath(filepath.Join(home, ".password-store-"+strings.Replace(mount, string(filepath.Separator), "-", -1)))
 	}
 	if d := os.Getenv("PASSWORD_STORE_DIR"); d != "" {
 		return fsutil.CleanPath(d)
 	}
-	return os.Getenv("HOME") + "/.password-store"
+
+	return filepath.Join(home, ".password-store")
 }

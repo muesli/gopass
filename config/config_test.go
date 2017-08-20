@@ -1,16 +1,14 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
+
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 func TestPwStoreDir(t *testing.T) {
-	home := ""
-	if h := os.Getenv("HOME"); h != "" {
-		home = h
-	}
+	home, _ := homedir.Dir()
 	for in, out := range map[string]string{
 		"":        filepath.Join(home, ".password-store"),
 		"work":    filepath.Join(home, ".password-store-work"),
