@@ -12,7 +12,7 @@ func TestPwStoreDir(t *testing.T) {
 	for in, out := range map[string]string{
 		"":        filepath.Join(home, ".password-store"),
 		"work":    filepath.Join(home, ".password-store-work"),
-		"foo/bar": filepath.Join(home, ".password-store-foo-bar"),
+		filepath.Join("foo","bar"): filepath.Join(home, ".password-store-foo-bar"),
 	} {
 		got := PwStoreDir(in)
 		if got != out {
