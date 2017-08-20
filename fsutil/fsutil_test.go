@@ -20,6 +20,7 @@ func TestCleanPath(t *testing.T) {
 	m[expanded] = filepath.Join(home, ".password-store")
 
 	for in, out := range m {
+		out = CleanPath(out)
 		got := CleanPath(in)
 		if out != got {
 			t.Errorf("Mismatch for %s: %s != %s", in, got, out)
