@@ -6,6 +6,7 @@ clone_folder: c:\gopath\src\github.com\justwatchcom\gopass
 
 environment:
   GOPATH: c:\gopath
+  GOPASS_BINARY: c:\gopath\src\github.com\justwatchcom\gopass\gopass.exe
 
 install:
     - echo %PATH%
@@ -21,7 +22,6 @@ build_script:
         go.exe test -v -cpu=2 (go.exe list ./... `
         |? { -not $_.Contains('/vendor/') })
     - go build
-    - set GOPASS_BINARY=gopass.exe
 #    - make vet
 #    - make lint
     - make test
