@@ -18,10 +18,10 @@ install:
         |? { -not $_.Contains('/vendor/') })
 
 build_script:
-    - ps: |
-        go.exe test -v -cpu=2 (go.exe list ./... `
-        |? { -not $_.Contains('/vendor/') })
     - go build
 #    - make vet
 #    - make lint
-    - make test
+    - ps: |
+        go.exe test -v -cpu=2 (go.exe list ./... `
+        |? { -not $_.Contains('/vendor/') })
+#    - make test
