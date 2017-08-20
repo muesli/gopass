@@ -48,7 +48,7 @@ func newTester(t *testing.T) *tester {
 	if err != nil {
 		t.Fatalf("Failed to stat GOPASS_BINARY %s: %s", gopassBin, err)
 	}
-	if fi.Mode()&0111 == 0 {
+	if !strings.HasSuffix(gopassBin, ".exe") && fi.Mode()&0111 == 0 {
 		t.Fatalf("GOPASS_BINARY is not executeable")
 	}
 	t.Logf("Using gopass binary: %s", gopassBin)
