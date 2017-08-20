@@ -21,6 +21,7 @@ build_script:
         go.exe test -v -cpu=2 (go.exe list ./... `
         |? { -not $_.Contains('/vendor/') })
     - go build
+    - set GOPASS_BINARY=gopass.exe
 #    - make vet
 #    - make lint
     - make test
