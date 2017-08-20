@@ -22,6 +22,6 @@ build_script:
 #    - make vet
 #    - make lint
     - ps: |
-        go.exe test -v -cpu=2 (go.exe list ./... `
+        go.exe test (go.exe list ./... `
         |? { -not $_.Contains('/vendor/') })
 #    - make test
