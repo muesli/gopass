@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/justwatchcom/gopass/pkg/fsutil"
 	homedir "github.com/mitchellh/go-homedir"
+	apppaths "github.com/muesli/go-app-paths"
 )
 
 // Homedir returns the users home dir or an empty string if the lookup fails
@@ -15,6 +14,7 @@ func Homedir() string {
 	if hd := os.Getenv("GOPASS_HOMEDIR"); hd != "" {
 		return hd
 	}
+
 	hd, err := homedir.Dir()
 	if err != nil {
 		if debug {
@@ -33,14 +33,17 @@ func configLocation() string {
 		return cf
 	}
 
-	// Second, check for the "XDG_CONFIG_HOME" environment variable
-	// (which is part of the XDG Base Directory Specification for Linux and
-	// other Unix-like operating sytstems)
-	if xch := os.Getenv("XDG_CONFIG_HOME"); xch != "" {
-		return filepath.Join(xch, "gopass", "config.yml")
+	scope := apppaths.NewScope(apppaths.User, "gopass", "gopass")
+	if hd := os.Getenv("GOPASS_HOMEDIR"); hd != "" {
+		scope = apppaths.NewCustomHomeScope(hd, "gopass", "gopass")
 	}
 
-	return filepath.Join(Homedir(), ".config", "gopass", "config.yml")
+	cf, err := scope.ConfigPath("config.yml")
+	if err != nil {
+		return filepath.Join(Homedir(), ".config", "gopass", "config.yml")
+	}
+
+	return cf
 }
 
 // configLocations returns the possible locations of gopass config files,
@@ -50,25 +53,18 @@ func configLocations() []string {
 	if cf := os.Getenv("GOPASS_CONFIG"); cf != "" {
 		l = append(l, cf)
 	}
-	if xch := os.Getenv("XDG_CONFIG_HOME"); xch != "" {
-		l = append(l, filepath.Join(xch, "gopass", "config.yml"))
+
+	scope := apppaths.NewScope(apppaths.User, "gopass", "gopass")
+	if hd := os.Getenv("GOPASS_HOMEDIR"); hd != "" {
+		scope = apppaths.NewCustomHomeScope(hd, "gopass", "gopass")
 	}
+	if cf, err := scope.ConfigPath("config.yml"); err == nil {
+		l = append(l, cf)
+	}
+
 	l = append(l, filepath.Join(Homedir(), ".config", "gopass", "config.yml"))
 	l = append(l, filepath.Join(Homedir(), ".gopass.yml"))
 	return l
-}
-
-// PwStoreDir reads the password store dir from the environment
-// or returns the default location ~/.password-store if the env is
-// not set
-func PwStoreDir(mount string) string {
-	if mount != "" {
-		return fsutil.CleanPath(filepath.Join(Homedir(), ".password-store-"+strings.Replace(mount, string(filepath.Separator), "-", -1)))
-	}
-	if d := os.Getenv("PASSWORD_STORE_DIR"); d != "" {
-		return fsutil.CleanPath(d)
-	}
-	return filepath.Join(Homedir(), ".password-store")
 }
 
 // Directory returns the configuration directory for the gopass config file
